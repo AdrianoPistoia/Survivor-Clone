@@ -47,10 +47,22 @@ export const WAVES = {
   HP_GROWTH: 1,            // extra HP per minute
 };
 
+
 export const XP = {
   BASE_TO_LEVEL: 10,
   GROWTH_FACTOR: 1.4,  // each level needs 1.4x more XP
   GEM_VALUE: 1,
+  BLUE_CHANCE_BASE: -0.05,       // −5%, becomes positive at minute 6
+  BLUE_CHANCE_PER_MIN: 0.01,     // +1% per minute
+  BLUE_CHANCE_MAX: 0.20,         // cap at 20%
+  BLUE_VALUE_MULT: 3,            // blue = 3× green value
+
+  VIOLET_CHANCE_BASE: -0.10,     // −10%, becomes positive at minute 11
+  VIOLET_CHANCE_PER_MIN: 0.01,   // +1% per minute
+  VIOLET_CHANCE_MAX: 0.10,       // cap at 10%
+  VIOLET_VALUE_MULT: 9,          // violet = 9× green value
+
+  FUSION_RADIUS: 50,             // px, proximity for orb fusion
 };
 
 export const WEAPONS = {
@@ -130,6 +142,26 @@ export const XP_SCALING = {
     { time: 750, multiplier: 2.0 },   // 12.5 minutes
     { time: 1020, multiplier: 2.5 },  // 17 minutes
   ],
+};
+
+export const REROLL = {
+  DEFAULT_MAX: 1,
+};
+
+export const SCORE = {
+  PER_KILL: 100,
+  PER_SECOND: 10,
+  PER_LEVEL: 500,
+};
+
+export const SILVER_COINS = {
+  WIN_RATIO: 0.10,
+  LOSE_RATIO: 0.05,
+};
+
+export const SHOP = {
+  REROLL_COSTS: [10000, 25000, 40000, 55000],
+  REROLL_MAX_PURCHASES: 4,
 };
 
 // Loot drop chances

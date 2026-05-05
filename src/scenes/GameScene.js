@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import { GAME, XP_SCALING, LOOT } from '../config/constants.js';
+import { GAME, XP_SCALING, LOOT, XP } from '../config/constants.js';
+import BlueGem from '../entities/BlueGem.js';
+import VioletGem from '../entities/VioletGem.js';
 import Player from '../entities/Player.js';
 import WaveSpawner from '../systems/WaveSpawner.js';
 import XPSystem from '../systems/XPSystem.js';
@@ -7,6 +9,7 @@ import HUD from '../ui/HUD.js';
 import CollectionOrb from '../entities/CollectionOrb.js';
 import HealingOrb from '../entities/HealingOrb.js';
 import Coin from '../entities/Coin.js';
+import FusionSystem from '../systems/FusionSystem.js';
 
 import Whip from '../weapons/Whip.js';
 import MagicMissile from '../weapons/MagicMissile.js';
@@ -27,6 +30,9 @@ export default class GameScene extends Phaser.Scene {
     this.isPaused = true;
     this.physics.pause();
     this.scene.launch('PauseMenu', { gameScene: this });
+    if (this.fusionSystem && this.fusionSystem.timer) {
+      this.fusionSystem.timer.paused = true;
+    }
   }
 
   constructor() {
@@ -52,6 +58,8 @@ export default class GameScene extends Phaser.Scene {
     // Groups
     this.enemies = this.physics.add.group();
     this.gems = this.physics.add.group();
+    this.blueGems = this.physics.add.group();
+    this.violetGems = this.physics.add.group();
     this.projectiles = this.physics.add.group();
     this.healingOrbsGroup = this.physics.add.group();
     this.coinsGroup = this.physics.add.group();
@@ -71,6 +79,7 @@ export default class GameScene extends Phaser.Scene {
     // Systems
     this.waveSpawner = new WaveSpawner(this);
     this.xpSystem = new XPSystem(this);
+    this.fusionSystem = new FusionSystem(this);
     this.weapons = [];
 
     // Start with dagger (basic attack)
@@ -86,6 +95,8 @@ export default class GameScene extends Phaser.Scene {
     // Collisions
     this.physics.add.overlap(this.player.sprite, this.enemies, this.onPlayerHitEnemy, null, this);
     this.physics.add.overlap(this.player.sprite, this.gems, this.onPlayerCollectGem, null, this);
+    this.physics.add.overlap(this.player.sprite, this.blueGems, this.onPlayerCollectBlueGem, null, this);
+    this.physics.add.overlap(this.player.sprite, this.violetGems, this.onPlayerCollectVioletGem, null, this);
     this.physics.add.overlap(this.projectiles, this.enemies, this.onProjectileHitEnemy, null, this);
     this.physics.add.overlap(this.player.sprite, this.healingOrbsGroup, this.onPlayerCollectHealing, null, this);
     this.physics.add.overlap(this.player.sprite, this.coinsGroup, this.onPlayerCollectCoin, null, this);
@@ -108,11 +119,16 @@ export default class GameScene extends Phaser.Scene {
       loop: true,
     });
 
-    // Listen for level up
+    // Level-up queue: buffer simultaneous level-ups and show them one at a time
+    this.pendingLevelUps = 0;
     this.events.on('levelup', () => {
-      this.isPaused = true;
-      this.physics.pause();
-      this.scene.launch('Upgrade', { gameScene: this });
+      if (this.isPaused) {
+        this.pendingLevelUps++;
+      } else {
+        this.isPaused = true;
+        this.physics.pause();
+        this.scene.launch('Upgrade', { gameScene: this });
+      }
     });
 
     // 2-finger tap pause for mobile (use pointer.event.touches)
@@ -139,8 +155,13 @@ export default class GameScene extends Phaser.Scene {
   }
 
   resumeFromUpgrade() {
-    this.isPaused = false;
-    this.physics.resume();
+    if (this.pendingLevelUps > 0) {
+      this.pendingLevelUps--;
+      this.scene.launch('Upgrade', { gameScene: this });
+    } else {
+      this.isPaused = false;
+      this.physics.resume();
+    }
   }
 
   getXPMultiplier() {
@@ -156,6 +177,32 @@ export default class GameScene extends Phaser.Scene {
 
   update(time, delta) {
     if (this.isGameOver || this.isPaused) return;
+
+    // === DEBUG: SPAWN ORBS FROM LOCALSTORAGE ===
+    // Drop exp orbs
+    const expCount = parseInt(localStorage.getItem('dropExp') || '0', 10);
+    if (expCount > 0) {
+      for (let i = 0; i < expCount; i++) {
+        const gem = this.gems.create(100, 100, 'gem');
+        gem.setData('value', 1);
+        gem.body.setAllowGravity(false);
+        gem.setDepth(1);
+      }
+      localStorage.removeItem('dropExp');
+    }
+    // Drop health orbs
+    const healthCount = parseInt(localStorage.getItem('dropHealth') || '0', 10);
+    if (healthCount > 0) {
+      for (let i = 0; i < healthCount; i++) {
+        new HealingOrb(this, 100, 100);
+      }
+      localStorage.removeItem('dropHealth');
+    }
+    // Drop collector orb
+    if (localStorage.getItem('dropCollector')) {
+      new CollectionOrb(this, 100, 100);
+      localStorage.removeItem('dropCollector');
+    }
 
     this.player.update(delta);
     this.waveSpawner.update(time, delta);
@@ -252,14 +299,37 @@ export default class GameScene extends Phaser.Scene {
 
   killEnemy(enemySprite) {
     this.kills++;
-    // Spawn gem at enemy position with XP scaling
-    const gem = this.gems.create(enemySprite.x, enemySprite.y, 'gem');
     const multiplier = this.getXPMultiplier();
-    gem.setData('value', multiplier);
-    gem.body.setAllowGravity(false);
-    gem.setDepth(1);
+    const minutesPassed = this.elapsedTime / 60;
+    // Drop order: violet → blue → green
+    let dropped = false;
+    // Violet chance
+    let chance = XP.VIOLET_CHANCE_BASE + XP.VIOLET_CHANCE_PER_MIN * minutesPassed;
+    chance = Math.max(0, Math.min(XP.VIOLET_CHANCE_MAX, chance));
+    if (Math.random() < chance) {
+      const violet = new VioletGem(this, enemySprite.x, enemySprite.y, XP.VIOLET_VALUE_MULT * multiplier);
+      this.violetGems.add(violet);
+      dropped = true;
+    }
+    // Blue chance (only if violet not dropped)
+    if (!dropped) {
+      let blueChance = XP.BLUE_CHANCE_BASE + XP.BLUE_CHANCE_PER_MIN * minutesPassed;
+      blueChance = Math.max(0, Math.min(XP.BLUE_CHANCE_MAX, blueChance));
+      if (Math.random() < blueChance) {
+        const blue = new BlueGem(this, enemySprite.x, enemySprite.y, XP.BLUE_VALUE_MULT * multiplier);
+        this.blueGems.add(blue);
+        dropped = true;
+      }
+    }
+    // Green fallback
+    if (!dropped) {
+      const gem = this.gems.create(enemySprite.x, enemySprite.y, 'gem');
+      gem.setData('value', multiplier);
+      gem.body.setAllowGravity(false);
+      gem.setDepth(1);
+    }
 
-    // Random drop chances (alongside the XP gem)
+    // Random drop chances (alongside the XP orb)
     const randCollection = Math.random();
     if (randCollection < LOOT.COLLECTION_ORB.CHANCE) {
       new CollectionOrb(this, enemySprite.x, enemySprite.y);
@@ -271,13 +341,23 @@ export default class GameScene extends Phaser.Scene {
     }
 
     const randCoin = Math.random();
-    const minutesPassed = this.elapsedTime / 60;
     const coinChance = LOOT.COIN.BASE_CHANCE + (minutesPassed / 3) * LOOT.COIN.BASE_CHANCE;
     if (randCoin < coinChance) {
       new Coin(this, enemySprite.x, enemySprite.y);
     }
 
     enemySprite.destroy();
+  }
+  onPlayerCollectBlueGem(playerSprite, blueGem) {
+    const value = blueGem.value || blueGem.getData('value') || 3;
+    this.xpSystem.addXP(value);
+    blueGem.destroy();
+  }
+
+  onPlayerCollectVioletGem(playerSprite, violetGem) {
+    const value = violetGem.value || violetGem.getData('value') || 9;
+    this.xpSystem.addXP(value);
+    violetGem.destroy();
   }
 
   gameOver() {

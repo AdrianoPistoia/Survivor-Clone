@@ -4,6 +4,7 @@
   "description": "Vampire Survivors clone built with Phaser 3",
   "type": "module",
   "scripts": {
+    "predev": "node increment-version.cjs && node copy-version.cjs",
     "dev": "vite",
     "build": "vite build",
     "start": "node server/index.js"

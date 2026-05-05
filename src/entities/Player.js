@@ -13,10 +13,12 @@ export default class Player {
     this.sprite.body.setSize(PLAYER.SIZE * 1.5, PLAYER.SIZE * 1.5);
 
     // Stats
-    this.hp = PLAYER.MAX_HP;
     this.baseMaxHP = PLAYER.MAX_HP;
     this.bonusHP = 0;
     this.baseSpeed = PLAYER.SPEED;
+    // Use localStorage playerHP if present (for debug)
+    const storedHP = typeof window !== 'undefined' ? parseInt(localStorage.getItem('playerHP') || '', 10) : NaN;
+    this.hp = !isNaN(storedHP) && storedHP > 0 ? storedHP : PLAYER.MAX_HP;
 
     // Multipliers (from upgrades)
     this.damageMultiplier = 1;

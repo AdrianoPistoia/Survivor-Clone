@@ -99,11 +99,18 @@ export default class PauseMenuScene extends Phaser.Scene {
   }
 
   openSettings() {
-    // Show placeholder settings screen
+    // Auto-close inventory/settings containers if open
     if (this.settingsContainer) {
       this.settingsContainer.destroy();
       this.settingsContainer = null;
-      return;
+    }
+    if (this.inventoryContainer) {
+      this.inventoryContainer.destroy();
+      this.inventoryContainer = null;
+    }
+    // Resume FusionSystem timer if present
+    if (this.gameScene.fusionSystem && this.gameScene.fusionSystem.timer) {
+      this.gameScene.fusionSystem.timer.paused = false;
     }
 
     const cx = this.scale.width / 2;
@@ -133,11 +140,18 @@ export default class PauseMenuScene extends Phaser.Scene {
   }
 
   openInventory() {
-    // Show inventory panel
+    // Auto-close inventory/settings containers if open
+    if (this.settingsContainer) {
+      this.settingsContainer.destroy();
+      this.settingsContainer = null;
+    }
     if (this.inventoryContainer) {
       this.inventoryContainer.destroy();
       this.inventoryContainer = null;
-      return;
+    }
+    // Resume FusionSystem timer if present
+    if (this.gameScene.fusionSystem && this.gameScene.fusionSystem.timer) {
+      this.gameScene.fusionSystem.timer.paused = false;
     }
 
     const cx = this.scale.width / 2;

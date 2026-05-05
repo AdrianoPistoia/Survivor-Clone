@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME } from '../config/constants.js';
+import { GAME, REROLL } from '../config/constants.js';
 import UPGRADE_DEFS from '../config/upgrades.js';
 
 export default class UpgradeScene extends Phaser.Scene {
@@ -12,6 +12,8 @@ export default class UpgradeScene extends Phaser.Scene {
   }
 
   create() {
+    const rerollMax = parseInt(localStorage.getItem('rerollMax') || '0', 10) || REROLL.DEFAULT_MAX;
+    this.rerollsLeft = rerollMax;
     this.upgradeObjects = [];
     this.drawUpgradeMenu();
     this.scale.on('resize', this.onResize, this);
@@ -50,10 +52,35 @@ export default class UpgradeScene extends Phaser.Scene {
     choices.forEach((upgrade, i) => {
       this.createCard(cx - cardSpacing + i * cardSpacing, cy + 30, upgrade, cardWidth, cardHeight);
     });
+
+    this.createRerollButton(cx, cy + cardHeight / 2 + 40);
   }
 
   onResize(gameSize) {
     this.drawUpgradeMenu();
+  }
+
+  createRerollButton(x, y) {
+    const depleted = this.rerollsLeft <= 0;
+    const label = depleted ? `[ REROLL (0 left) ]` : `[ REROLL (${this.rerollsLeft} left) ]`;
+    const color = depleted ? '#444444' : '#ff8844';
+    const hoverColor = '#ffbb88';
+
+    const btn = this.add.text(x, y, label, {
+      fontSize: '20px', fontFamily: 'monospace', color,
+    }).setOrigin(0.5);
+
+    if (!depleted) {
+      btn.setInteractive({ useHandCursor: true });
+      btn.on('pointerover', () => btn.setColor(hoverColor));
+      btn.on('pointerout', () => btn.setColor(color));
+      btn.on('pointerdown', () => {
+        this.rerollsLeft -= 1;
+        this.drawUpgradeMenu();
+      });
+    }
+
+    this.upgradeObjects.push(btn);
   }
 
   getAvailableUpgrades() {

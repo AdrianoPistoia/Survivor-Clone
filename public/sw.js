@@ -12,7 +12,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate: remove old caches
+// Activate: remove old caches and check for updates if online
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames =>
@@ -23,6 +23,12 @@ self.addEventListener('activate', event => {
       )
     ).then(() => self.clients.claim())
   );
+
+  // Always check for updates if online
+  if (self.navigator && typeof self.navigator.onLine !== 'undefined' && self.navigator.onLine) {
+    self.skipWaiting();
+    self.registration.update && self.registration.update();
+  }
 });
 
 // Fetch: cache-first for game assets, network-first for API

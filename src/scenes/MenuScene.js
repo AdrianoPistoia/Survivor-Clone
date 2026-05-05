@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME } from '../config/constants.js';
+import { getTopScores } from '../utils/leaderboard.js';
 
 export default class MenuScene extends Phaser.Scene {
   constructor() {
@@ -13,13 +14,25 @@ export default class MenuScene extends Phaser.Scene {
     this.leaderboardContainer = null;
   }
 
-  drawMenu() {
+  async drawMenu() {
     if (this.menuObjects) {
       this.menuObjects.forEach(obj => obj.destroy());
     }
     this.menuObjects = [];
     const cx = this.scale.width / 2;
     const cy = this.scale.height / 2;
+
+    // Fetch version from version.json
+    let versionString = '';
+    try {
+      const response = await fetch('version.json?_=' + Date.now());
+      if (response.ok) {
+        const version = await response.json();
+        versionString = `${version.stage}.${version.revision}.${version.implementation}_${String(version.iteration).padStart(3, '0')}`;
+      }
+    } catch (e) {
+      versionString = '';
+    }
 
     const title = this.add.text(cx, cy - 120, 'SURVIVOR CLONE', {
       fontSize: Math.round(this.scale.width / 16) + 'px',
@@ -35,6 +48,16 @@ export default class MenuScene extends Phaser.Scene {
       color: '#aaaaaa',
     }).setOrigin(0.5);
     this.menuObjects.push(subtitle);
+
+    // Show version at the bottom right
+    if (versionString) {
+      const versionText = this.add.text(this.scale.width - 20, this.scale.height - 20, `v${versionString}`, {
+        fontSize: Math.round(this.scale.width / 50) + 'px',
+        fontFamily: 'monospace',
+        color: '#888888',
+      }).setOrigin(1, 1);
+      this.menuObjects.push(versionText);
+    }
 
 
     // Play button
@@ -87,9 +110,7 @@ export default class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
     shopBtn.on('pointerover', () => shopBtn.setColor('#ffcc88'));
     shopBtn.on('pointerout', () => shopBtn.setColor('#ffaa44'));
-    shopBtn.on('pointerdown', () => {
-      console.log('Shop coming soon in v0.1.2!');
-    });
+    shopBtn.on('pointerdown', () => this.scene.start('Shop'));
     this.menuObjects.push(shopBtn);
 
     const moveText = this.add.text(cx, cy + 180, 'Move: W A S D', {
@@ -104,7 +125,7 @@ export default class MenuScene extends Phaser.Scene {
     this.drawMenu();
   }
 
-  async showLeaderboard() {
+  showLeaderboard() {
     if (this.leaderboardContainer) {
       this.leaderboardContainer.destroy();
       this.leaderboardContainer = null;
@@ -114,7 +135,9 @@ export default class MenuScene extends Phaser.Scene {
     const cx = GAME.WIDTH / 2;
     this.leaderboardContainer = this.add.container(cx, 200);
 
-    const bg = this.add.rectangle(0, 0, 500, 300, 0x000000, 0.85).setOrigin(0.5, 0);
+    const scores = getTopScores(10);
+    const bgHeight = scores.length > 0 ? 60 + scores.length * 24 + 20 : 110;
+    const bg = this.add.rectangle(0, 0, 540, bgHeight, 0x000000, 0.85).setOrigin(0.5, 0);
     this.leaderboardContainer.add(bg);
 
     const title = this.add.text(0, 15, 'TOP 10 SCORES', {
@@ -122,30 +145,23 @@ export default class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.leaderboardContainer.add(title);
 
-    try {
-      const res = await fetch('/api/leaderboard');
-      const scores = await res.json();
+    if (scores.length === 0) {
+      const t = this.add.text(0, 60, 'No scores yet!', {
+        fontSize: '16px', fontFamily: 'monospace', color: '#666666',
+      }).setOrigin(0.5);
+      this.leaderboardContainer.add(t);
+    } else {
       scores.forEach((entry, i) => {
         const mins = Math.floor(entry.timeSurvived / 60);
         const secs = entry.timeSurvived % 60;
         const timeStr = `${mins}:${String(secs).padStart(2, '0')}`;
-        const line = `${i + 1}. ${entry.name.padEnd(12)} ${timeStr}  ${entry.kills} kills`;
+        const scoreStr = (entry.score || 0).toLocaleString();
+        const line = `${String(i + 1).padStart(2)}. ${entry.name.substring(0, 12).padEnd(12)}  ${timeStr}  ${String(entry.kills).padStart(4)} kills  ${scoreStr}pts`;
         const t = this.add.text(0, 50 + i * 24, line, {
-          fontSize: '14px', fontFamily: 'monospace', color: '#cccccc',
+          fontSize: '13px', fontFamily: 'monospace', color: '#cccccc',
         }).setOrigin(0.5);
         this.leaderboardContainer.add(t);
       });
-      if (scores.length === 0) {
-        const t = this.add.text(0, 80, 'No scores yet!', {
-          fontSize: '16px', fontFamily: 'monospace', color: '#666666',
-        }).setOrigin(0.5);
-        this.leaderboardContainer.add(t);
-      }
-    } catch {
-      const t = this.add.text(0, 80, 'Could not load leaderboard', {
-        fontSize: '16px', fontFamily: 'monospace', color: '#ff4444',
-      }).setOrigin(0.5);
-      this.leaderboardContainer.add(t);
     }
   }
 }
