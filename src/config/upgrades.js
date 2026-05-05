@@ -6,7 +6,7 @@ const UPGRADE_DEFS = [
     name: 'Damage Up',
     description: 'Increase all weapon damage by 20%',
     icon: 'upgrade_damage',
-    maxLevel: 999, // Can reappear indefinitely
+    maxLevel: UPGRADES.MAX_LEVEL,
     apply(player, level) {
       player.damageMultiplier = 1 + UPGRADES.DAMAGE_MULT * level;
     },
@@ -16,7 +16,7 @@ const UPGRADE_DEFS = [
     name: 'Attack Speed',
     description: 'Reduce weapon cooldowns by 10%',
     icon: 'upgrade_speed',
-    maxLevel: 999, // Can reappear indefinitely
+    maxLevel: UPGRADES.MAX_LEVEL,
     apply(player, level) {
       player.cooldownMultiplier = 1 - UPGRADES.COOLDOWN_MULT * level;
     },
@@ -26,7 +26,7 @@ const UPGRADE_DEFS = [
     name: 'Move Speed',
     description: 'Increase movement speed by 15%',
     icon: 'upgrade_move',
-    maxLevel: 999, // Can reappear indefinitely
+    maxLevel: UPGRADES.MAX_LEVEL,
     apply(player, level) {
       player.speedMultiplier = 1 + UPGRADES.SPEED_MULT * level;
     },
@@ -36,7 +36,7 @@ const UPGRADE_DEFS = [
     name: 'Max HP',
     description: `+${UPGRADES.HP_BONUS} max HP and heal`,
     icon: 'upgrade_hp',
-    maxLevel: 999, // Can reappear indefinitely
+    maxLevel: UPGRADES.MAX_LEVEL,
     apply(player, level) {
       player.bonusHP = UPGRADES.HP_BONUS * level;
       player.hp = player.getMaxHP();
@@ -47,7 +47,7 @@ const UPGRADE_DEFS = [
     name: 'Magnet',
     description: `+${UPGRADES.PICKUP_BONUS} gem pickup range`,
     icon: 'upgrade_magnet',
-    maxLevel: 999, // Can reappear indefinitely
+    maxLevel: UPGRADES.MAX_LEVEL,
     apply(player, level) {
       player.bonusPickupRange = UPGRADES.PICKUP_BONUS * level;
     },

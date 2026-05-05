@@ -4,7 +4,7 @@ export const GAME = {
   HEIGHT: 600,
   ARENA_WIDTH: 2000,
   ARENA_HEIGHT: 2000,
-  DURATION: 1200, // 20 minutes in seconds
+  DURATION: 600, // 10 minutes in seconds
   FIRE_WAND: {
     DAMAGE: 30,
     COOLDOWN: 1200,
@@ -77,7 +77,7 @@ export const WEAPONS = {
   // --- 5 new weapons ---
   DAGGER: {
     DAMAGE: 8,
-    COOLDOWN: 950,   // very fast
+    COOLDOWN: 350,   // very fast
     SPEED: 500,
     LIFETIME: 1200,
     COUNT: 1,        // projectiles per shot
@@ -88,7 +88,6 @@ export const WEAPONS = {
     SPEED: 280,
     GRAVITY: 600,    // arc trajectory
     LIFETIME: 2500,
-    COUNT: 1,        // orbiting axes
   },
   BIBLE: {
     DAMAGE: 15,
@@ -121,31 +120,4 @@ export const UPGRADES = {
   HP_BONUS: 20,        // +20 max HP per level
   PICKUP_BONUS: 30,    // +30 pickup range per level
   MAX_LEVEL: 5,        // max times each upgrade can be picked
-};
-
-// XP Scaling milestones (times in seconds)
-export const XP_SCALING = {
-  MILESTONES: [
-    { time: 300, multiplier: 1.5 },   // 5 minutes
-    { time: 750, multiplier: 2.0 },   // 12.5 minutes
-    { time: 1020, multiplier: 2.5 },  // 17 minutes
-  ],
-};
-
-// Loot drop chances
-export const LOOT = {
-  COLLECTION_ORB: {
-    CHANCE: 0.015,           // 1.5%
-    MAGNET_RANGE: 800,      // pixels
-    ANIMATION_DURATION: 500, // ms
-  },
-  HEALING_ORB: {
-    CHANCE: 0.03,           // 3%
-    HEAL_MIN_PERCENT: 0.01, // 1% of max HP
-    HEAL_MAX_PERCENT: 0.05, // 5% of max HP
-  },
-  COIN: {
-    BASE_CHANCE: 0.04,      // 4%
-    SCALE_FACTOR: 0.666,    // increases every 3 minutes
-  },
 };

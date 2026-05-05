@@ -79,20 +79,7 @@ export default class MenuScene extends Phaser.Scene {
     lbBtn.on('pointerdown', () => this.showLeaderboard());
     this.menuObjects.push(lbBtn);
 
-    // Shop button
-    const shopBtn = this.add.text(cx, cy + 120, '[ SHOP ]', {
-      fontSize: Math.round(this.scale.width / 32) + 'px',
-      fontFamily: 'monospace',
-      color: '#ffaa44',
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    shopBtn.on('pointerover', () => shopBtn.setColor('#ffcc88'));
-    shopBtn.on('pointerout', () => shopBtn.setColor('#ffaa44'));
-    shopBtn.on('pointerdown', () => {
-      console.log('Shop coming soon in v0.1.2!');
-    });
-    this.menuObjects.push(shopBtn);
-
-    const moveText = this.add.text(cx, cy + 180, 'Move: W A S D', {
+    const moveText = this.add.text(cx, cy + 150, 'Move: W A S D', {
       fontSize: Math.round(this.scale.width / 48) + 'px',
       fontFamily: 'monospace',
       color: '#666666',

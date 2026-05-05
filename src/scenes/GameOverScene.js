@@ -7,12 +7,7 @@ export default class GameOverScene extends Phaser.Scene {
   }
 
   init(data) {
-    this.stats = data || {};
-    // Ensure all required fields exist
-    this.stats.kills = this.stats.kills || 0;
-    this.stats.time = this.stats.time || 0;
-    this.stats.level = this.stats.level || 1;
-    this.stats.victory = this.stats.victory || false;
+    this.stats = data;
   }
 
   create() {
@@ -95,9 +90,9 @@ export default class GameOverScene extends Phaser.Scene {
 
     const body = {
       name: this.playerName.trim().substring(0, 20),
-      kills: this.stats.kills || 0,
-      timeSurvived: this.stats.time || 0,
-      level: this.stats.level || 1,
+      kills: this.stats.kills,
+      timeSurvived: this.stats.time,
+      level: this.stats.level,
     };
 
     try {
@@ -109,13 +104,10 @@ export default class GameOverScene extends Phaser.Scene {
       if (res.ok) {
         this.statusText.setText('Score submitted!').setColor('#44ff44');
       } else {
-        const errorText = await res.text().catch(() => 'Unknown error');
-        console.error('Submit score error:', res.status, errorText);
         this.statusText.setText('Failed to submit score').setColor('#ff4444');
         this.submitted = false;
       }
-    } catch (error) {
-      console.error('Submit score error:', error);
+    } catch {
       this.statusText.setText('Could not connect to server').setColor('#ff4444');
       this.submitted = false;
     }
