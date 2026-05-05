@@ -27,11 +27,19 @@ export default class Player {
     // Upgrade tracking
     this.upgradeLevels = {};
 
+    // Inventory (5 weapons, 5 items)
+    this.weaponSlots = new Array(5).fill(null);
+    this.itemSlots = new Array(5).fill(null);
+
     // Invulnerability
     this.isInvulnerable = false;
 
     // Direction facing (for whip)
     this.facing = new Phaser.Math.Vector2(1, 0);
+
+    // Aiming direction (for dagger basic attack)
+    this.aimDirection = new Phaser.Math.Vector2(1, 0);
+    this.isAiming = false;
 
     // Input
     this.keys = scene.input.keyboard.addKeys({
@@ -41,6 +49,53 @@ export default class Player {
       D: Phaser.Input.Keyboard.KeyCodes.D,
     });
     this.joystick = new Joystick(scene);
+
+    // Right-click aiming (desktop) / touch aim (mobile)
+    this.rightMouseDown = false;
+    
+    scene.input.on('pointerdown', (pointer) => {
+      if (pointer.button === 2) { // Right-click
+        this.rightMouseDown = true;
+        this.isAiming = true;
+        this.updateAimDirection(pointer);
+      }
+    });
+
+    scene.input.on('pointermove', (pointer) => {
+      if (this.rightMouseDown && this.isAiming) {
+        this.updateAimDirection(pointer);
+      }
+    });
+
+    scene.input.on('pointerup', (pointer) => {
+      if (pointer.button === 2) {
+        this.rightMouseDown = false;
+        this.isAiming = false;
+      }
+    });
+
+    // Enable right-click context menu suppression
+    if (typeof document !== 'undefined') {
+      document.addEventListener('contextmenu', (e) => {
+        // Allow context menu on non-game areas
+        if (e.target === scene.game.canvas) {
+          e.preventDefault();
+        }
+      });
+    }
+  }
+
+  updateAimDirection(pointer) {
+    // Calculate direction from player to pointer
+    const worldX = pointer.worldX || pointer.x;
+    const worldY = pointer.worldY || pointer.y;
+    const dx = worldX - this.sprite.x;
+    const dy = worldY - this.sprite.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist > 0) {
+      this.aimDirection.set(dx / dist, dy / dist);
+    }
   }
 
   getMaxHP() {

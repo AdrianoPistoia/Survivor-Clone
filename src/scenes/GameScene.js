@@ -1,9 +1,12 @@
 import Phaser from 'phaser';
-import { GAME } from '../config/constants.js';
+import { GAME, XP_SCALING, LOOT } from '../config/constants.js';
 import Player from '../entities/Player.js';
 import WaveSpawner from '../systems/WaveSpawner.js';
 import XPSystem from '../systems/XPSystem.js';
 import HUD from '../ui/HUD.js';
+import CollectionOrb from '../entities/CollectionOrb.js';
+import HealingOrb from '../entities/HealingOrb.js';
+import Coin from '../entities/Coin.js';
 
 import Whip from '../weapons/Whip.js';
 import MagicMissile from '../weapons/MagicMissile.js';
@@ -19,17 +22,13 @@ import Cross from '../weapons/Cross.js';
 const WEAPON_CLASSES = { Whip, MagicMissile, Aura, Dagger, Axe, Bible, Lightning, HolyWater, FireWand, Cross };
 
 export default class GameScene extends Phaser.Scene {
-    togglePause() {
-      if (this.isGameOver) return;
-      this.isPaused = !this.isPaused;
-      if (this.isPaused) {
-        this.physics.pause();
-        // Optionally, show a pause overlay here
-      } else {
-        this.physics.resume();
-        // Optionally, hide pause overlay here
-      }
-    }
+  togglePause() {
+    if (this.isGameOver) return;
+    this.isPaused = true;
+    this.physics.pause();
+    this.scene.launch('PauseMenu', { gameScene: this });
+  }
+
   constructor() {
     super('Game');
   }
@@ -54,6 +53,9 @@ export default class GameScene extends Phaser.Scene {
     this.enemies = this.physics.add.group();
     this.gems = this.physics.add.group();
     this.projectiles = this.physics.add.group();
+    this.healingOrbsGroup = this.physics.add.group();
+    this.coinsGroup = this.physics.add.group();
+    this.collectionOrbsGroup = this.physics.add.group();
 
     // Player
     this.player = new Player(this, GAME.ARENA_WIDTH / 2, GAME.ARENA_HEIGHT / 2);
@@ -71,12 +73,13 @@ export default class GameScene extends Phaser.Scene {
     this.xpSystem = new XPSystem(this);
     this.weapons = [];
 
-    // Start with whip
-    this.addWeapon('Whip');
+    // Start with dagger (basic attack)
+    this.addWeapon('Dagger');
 
     // Game state
     this.kills = 0;
     this.elapsedTime = 0;
+    this.coinsCollected = 0;
     this.isGameOver = false;
     this.isPaused = false;
 
@@ -84,6 +87,9 @@ export default class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.player.sprite, this.enemies, this.onPlayerHitEnemy, null, this);
     this.physics.add.overlap(this.player.sprite, this.gems, this.onPlayerCollectGem, null, this);
     this.physics.add.overlap(this.projectiles, this.enemies, this.onProjectileHitEnemy, null, this);
+    this.physics.add.overlap(this.player.sprite, this.healingOrbsGroup, this.onPlayerCollectHealing, null, this);
+    this.physics.add.overlap(this.player.sprite, this.coinsGroup, this.onPlayerCollectCoin, null, this);
+    this.physics.add.overlap(this.player.sprite, this.collectionOrbsGroup, this.onPlayerCollectCollection, null, this);
 
     // HUD (UI camera)
     this.hud = new HUD(this);
@@ -137,6 +143,17 @@ export default class GameScene extends Phaser.Scene {
     this.physics.resume();
   }
 
+  getXPMultiplier() {
+    const milestones = XP_SCALING.MILESTONES;
+    let multiplier = 1.0;
+    for (const milestone of milestones) {
+      if (this.elapsedTime >= milestone.time) {
+        multiplier = milestone.multiplier;
+      }
+    }
+    return multiplier;
+  }
+
   update(time, delta) {
     if (this.isGameOver || this.isPaused) return;
 
@@ -147,7 +164,7 @@ export default class GameScene extends Phaser.Scene {
       weapon.update(time, delta);
     }
 
-    // Gem magnet
+    // Gem + Coin magnet (but NOT healing orbs)
     [...this.gems.getChildren()].forEach(gem => {
       if (!gem.active) return;
       const dist = Phaser.Math.Distance.Between(
@@ -157,6 +174,18 @@ export default class GameScene extends Phaser.Scene {
       const range = this.player.getPickupRange();
       if (dist < range) {
         this.physics.moveToObject(gem, this.player.sprite, 300);
+      }
+    });
+
+    [...this.coinsGroup.getChildren()].forEach(coin => {
+      if (!coin.active) return;
+      const dist = Phaser.Math.Distance.Between(
+        this.player.sprite.x, this.player.sprite.y,
+        coin.x, coin.y
+      );
+      const range = this.player.getPickupRange();
+      if (dist < range) {
+        this.physics.moveToObject(coin, this.player.sprite, 300);
       }
     });
 
@@ -175,6 +204,27 @@ export default class GameScene extends Phaser.Scene {
     const value = gem.getData('value') || 1;
     this.xpSystem.addXP(value);
     gem.destroy();
+  }
+
+  onPlayerCollectHealing(playerSprite, healingOrbSprite) {
+    // Call the collect method stored in the sprite data
+    const collectFn = healingOrbSprite.getData('collectFn');
+    if (collectFn) collectFn();
+    healingOrbSprite.destroy();
+  }
+
+  onPlayerCollectCoin(playerSprite, coinSprite) {
+    // Call the collect method stored in the sprite data
+    const collectFn = coinSprite.getData('collectFn');
+    if (collectFn) collectFn();
+    coinSprite.destroy();
+  }
+
+  onPlayerCollectCollection(playerSprite, collectionOrbSprite) {
+    // Call the collect method stored in the sprite data
+    const collectFn = collectionOrbSprite.getData('collectFn');
+    if (collectFn) collectFn();
+    collectionOrbSprite.destroy();
   }
 
   onProjectileHitEnemy(projectile, enemySprite) {
@@ -202,11 +252,31 @@ export default class GameScene extends Phaser.Scene {
 
   killEnemy(enemySprite) {
     this.kills++;
-    // Spawn gem at enemy position
+    // Spawn gem at enemy position with XP scaling
     const gem = this.gems.create(enemySprite.x, enemySprite.y, 'gem');
-    gem.setData('value', 1);
+    const multiplier = this.getXPMultiplier();
+    gem.setData('value', multiplier);
     gem.body.setAllowGravity(false);
     gem.setDepth(1);
+
+    // Random drop chances (alongside the XP gem)
+    const randCollection = Math.random();
+    if (randCollection < LOOT.COLLECTION_ORB.CHANCE) {
+      new CollectionOrb(this, enemySprite.x, enemySprite.y);
+    }
+
+    const randHealing = Math.random();
+    if (randHealing < LOOT.HEALING_ORB.CHANCE) {
+      new HealingOrb(this, enemySprite.x, enemySprite.y);
+    }
+
+    const randCoin = Math.random();
+    const minutesPassed = this.elapsedTime / 60;
+    const coinChance = LOOT.COIN.BASE_CHANCE + (minutesPassed / 3) * LOOT.COIN.BASE_CHANCE;
+    if (randCoin < coinChance) {
+      new Coin(this, enemySprite.x, enemySprite.y);
+    }
+
     enemySprite.destroy();
   }
 

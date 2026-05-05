@@ -26,6 +26,8 @@ export default class Joystick {
 
   addListeners() {
     this.scene.input.on('pointerdown', pointer => {
+      // Ignore right-click (button 2) and middle-click
+      if (pointer.button !== 0) return;
       if (this.active) return;
       if (!pointer.isDown) return;
       this.active = true;

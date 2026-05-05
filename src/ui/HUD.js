@@ -14,6 +14,7 @@ export default class HUD {
     this.levelText = scene.add.text(0, 0, '', { fontSize: '10px', fontFamily: 'monospace', color: '#ffffff' }).setOrigin(0.5, 0).setScrollFactor(sf).setDepth(102);
     this.timerText = scene.add.text(0, 0, '0:00', { fontSize: '20px', fontFamily: 'monospace', color: '#ffffff' }).setOrigin(1, 0).setScrollFactor(sf).setDepth(100);
     this.killText = scene.add.text(0, 0, 'Kills: 0', { fontSize: '14px', fontFamily: 'monospace', color: '#ffff44' }).setOrigin(0, 0).setScrollFactor(sf).setDepth(100);
+    this.coinText = scene.add.text(0, 0, 'Coins: 0', { fontSize: '14px', fontFamily: 'monospace', color: '#cccccc' }).setOrigin(0, 0).setScrollFactor(sf).setDepth(100);
     this.weaponText = scene.add.text(0, 0, '', { fontSize: '12px', fontFamily: 'monospace', color: '#aaaaaa' }).setOrigin(0, 0).setScrollFactor(sf).setDepth(100);
 
     // Initial position
@@ -45,8 +46,10 @@ export default class HUD {
     this.timerText.setPosition(width - 10, pad / zoom);
     // Kill counter
     this.killText.setPosition(10, pad / zoom);
+    // Coin counter
+    this.coinText.setPosition(10, (pad + 16) / zoom);
     // Weapon list
-    this.weaponText.setPosition(10, (pad + 20) / zoom);
+    this.weaponText.setPosition(10, (pad + 32) / zoom);
   }
 
   update() {
@@ -71,6 +74,9 @@ export default class HUD {
 
     // Kills
     this.killText.setText(`Kills: ${scene.kills}`);
+
+    // Coins
+    this.coinText.setText(`Coins: ${scene.coinsCollected}`);
 
     // Weapons list
     const weaponNames = scene.weapons.map(w => w.constructor.name);
