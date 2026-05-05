@@ -5,6 +5,7 @@ import MenuScene from './scenes/MenuScene.js';
 import GameScene from './scenes/GameScene.js';
 import UpgradeScene from './scenes/UpgradeScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
+import PauseMenuScene from './scenes/PauseMenuScene.js';
 
 function getLandscapeSize() {
   const w = window.innerWidth;
@@ -43,7 +44,7 @@ function createGame() {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [BootScene, MenuScene, GameScene, UpgradeScene, GameOverScene],
+    scene: [BootScene, MenuScene, GameScene, UpgradeScene, GameOverScene, PauseMenuScene],
   };
   return new Phaser.Game(config);
 }
