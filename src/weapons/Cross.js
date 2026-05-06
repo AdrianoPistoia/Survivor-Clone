@@ -2,6 +2,12 @@ import WeaponBase from './WeaponBase.js';
 import { WEAPONS } from '../config/constants.js';
 
 export default class Cross extends WeaponBase {
+  update(time, delta) {
+    if (this.canFire(time)) {
+      this.fire(time);
+      this.lastFired = time;
+    }
+  }
   get damage() {
     return this.getDamage();
   }
@@ -11,6 +17,10 @@ export default class Cross extends WeaponBase {
   }
   constructor(scene, config = WEAPONS.CROSS) {
     super(scene, config);
+    // Weapon tags and multipliers
+    this.tags = ['PHY'];
+    this.physDamageBonus = 0;
+    this.projectileCountBonus = 0;
     this.projectileCount = config.COUNT ?? 1;
   }
 
@@ -27,14 +37,18 @@ export default class Cross extends WeaponBase {
       const projectile = this.scene.projectiles.create(px, py, 'cross');
       projectile.setData('damage', this.getDamage());
       projectile.body.setAllowGravity(false);
-      projectile.setDepth(8);
+      projectile.setDepth(20); // bring to front
       projectile.setRotation(angle);
       // Outward velocity
       projectile.setVelocity(
         Math.cos(angle) * WEAPONS.CROSS.SPEED,
         Math.sin(angle) * WEAPONS.CROSS.SPEED
       );
-      // Boomerang effect: reverse after half lifetime
+      // Set body size to match texture
+      if (projectile.body && projectile.setSize) {
+        projectile.setSize(32, 32);
+      }
+      projectile.setAlpha(1);
       this.scene.time.delayedCall(WEAPONS.CROSS.LIFETIME / 2, () => {
         if (projectile.active) {
           projectile.setVelocity(
@@ -43,7 +57,6 @@ export default class Cross extends WeaponBase {
           );
         }
       });
-      // Destroy after full lifetime
       this.scene.time.delayedCall(WEAPONS.CROSS.LIFETIME, () => {
         if (projectile.active) projectile.destroy();
       });

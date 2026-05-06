@@ -10,6 +10,10 @@ import { WEAPONS } from '../config/constants.js';
 export default class HolyWater extends WeaponBase {
   constructor(scene) {
     super(scene, WEAPONS.HOLY_WATER);
+    // Weapon tags and multipliers
+    this.tags = ['MAG'];
+    this.magDamageBonus = 0;
+    this.areaMultiplier = 1;
   }
 
   fire(time) {

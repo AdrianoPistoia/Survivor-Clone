@@ -25,6 +25,8 @@ export default class Player {
     this.cooldownMultiplier = 1;
     this.speedMultiplier = 1;
     this.bonusPickupRange = 0;
+    this.magDamageBonus = 0;
+    this.physDamageBonus = 0;
 
     // Upgrade tracking
     this.upgradeLevels = {};

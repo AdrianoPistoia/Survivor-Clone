@@ -47,9 +47,29 @@ const UPGRADE_DEFS = [
     name: 'Magnet',
     description: `+${UPGRADES.PICKUP_BONUS} gem pickup range`,
     icon: 'upgrade_magnet',
-    maxLevel: 999, // Can reappear indefinitely
+    maxLevel: 999,
     apply(player, level) {
       player.bonusPickupRange = UPGRADES.PICKUP_BONUS * level;
+    },
+  },
+  {
+    id: 'magic_power',
+    name: 'Magic Power',
+    description: '+25% damage for all MAG weapons',
+    icon: 'upgrade_magic',
+    maxLevel: 5,
+    apply(player, level) {
+      player.magDamageBonus = UPGRADES.MAG_BONUS * level;
+    },
+  },
+  {
+    id: 'physical_power',
+    name: 'Physical Power',
+    description: '+25% damage for all PHY weapons',
+    icon: 'upgrade_physical',
+    maxLevel: 5,
+    apply(player, level) {
+      player.physDamageBonus = UPGRADES.PHY_BONUS * level;
     },
   },
   {
@@ -123,6 +143,24 @@ const UPGRADE_DEFS = [
     maxLevel: 1,
     isWeapon: true,
     weaponType: 'HolyWater',
+  },
+  {
+    id: 'weapon_firewand',
+    name: 'Fire Wand',
+    description: 'Fires a fireball at random enemies',
+    icon: 'upgrade_firewand',
+    maxLevel: 1,
+    isWeapon: true,
+    weaponType: 'FireWand',
+  },
+  {
+    id: 'weapon_cross',
+    name: 'Cross',
+    description: 'Throws a boomerang that returns to you',
+    icon: 'upgrade_cross',
+    maxLevel: 1,
+    isWeapon: true,
+    weaponType: 'Cross',
   },
 ];
 

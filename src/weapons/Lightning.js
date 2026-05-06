@@ -9,6 +9,10 @@ import { WEAPONS } from '../config/constants.js';
 export default class Lightning extends WeaponBase {
   constructor(scene) {
     super(scene, WEAPONS.LIGHTNING);
+    // Weapon tags and multipliers
+    this.tags = ['MAG'];
+    this.magDamageBonus = 0;
+    this.areaMultiplier = 1;
   }
 
   fire(time) {

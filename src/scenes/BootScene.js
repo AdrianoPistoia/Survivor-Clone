@@ -73,6 +73,10 @@ export default class BootScene extends Phaser.Scene {
       upgrade_bible: 0xffffaa,
       upgrade_lightning: 0xeeff44,
       upgrade_holywater: 0x44aaff,
+      upgrade_firewand: 0xff5522,
+      upgrade_cross: 0xffffff,
+      upgrade_magic: 0xaa44ff,
+      upgrade_physical: 0xff8844,
     };
     for (const [key, color] of Object.entries(colors)) {
       const g = this.make.graphics({ add: false });
@@ -91,6 +95,7 @@ export default class BootScene extends Phaser.Scene {
     dg.generateTexture('dagger', 20, 6);
     dg.destroy();
 
+
     // Axe - orange diamond/wedge shape
     const axg = this.make.graphics({ add: false });
     axg.fillStyle(0xff8822);
@@ -99,6 +104,28 @@ export default class BootScene extends Phaser.Scene {
     axg.fillRect(10, 18, 4, 8);
     axg.generateTexture('axe', 24, 26);
     axg.destroy();
+
+    // FireWand projectile - small red fireball
+    const fwg = this.make.graphics({ add: false });
+    fwg.fillStyle(0xcc1100, 1);
+    fwg.fillCircle(6, 6, 6);
+    fwg.fillStyle(0xff4422, 1);
+    fwg.fillCircle(5, 4, 3);
+    fwg.generateTexture('firewand', 12, 12);
+    fwg.destroy();
+
+    // Cross projectile - large, bright, with outline
+    const crg = this.make.graphics({ add: false });
+    crg.fillStyle(0xffffff, 1);
+    crg.fillRect(12, 0, 8, 32);
+    crg.fillRect(0, 12, 32, 8);
+    crg.lineStyle(4, 0x88ccee, 1);
+    crg.strokeRect(12, 0, 8, 32);
+    crg.strokeRect(0, 12, 32, 8);
+    crg.lineStyle(2, 0xff0000, 1);
+    crg.strokeRect(0, 0, 32, 32);
+    crg.generateTexture('cross', 32, 32);
+    crg.destroy();
 
     // Bible - gold book rectangle
     const bg2 = this.make.graphics({ add: false });

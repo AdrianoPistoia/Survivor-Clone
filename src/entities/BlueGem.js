@@ -17,9 +17,10 @@ export default class BlueGem extends Phaser.Physics.Arcade.Sprite {
     super(scene, x, y, key);
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    this.value = value || XP.BLUE_VALUE_MULT * XP.GEM_VALUE;
+    this.setData('value', value || XP.BLUE_VALUE_MULT * XP.GEM_VALUE);
+    this.body.setAllowGravity(false);
     this.setCircle(14, 2, 2);
-    this.setDepth(2);
+    this.setDepth(1);
     this.setScale(1.15);
   }
 }

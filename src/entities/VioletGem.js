@@ -17,9 +17,10 @@ export default class VioletGem extends Phaser.Physics.Arcade.Sprite {
     super(scene, x, y, key);
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    this.value = value || XP.VIOLET_VALUE_MULT * XP.GEM_VALUE;
+    this.setData('value', value || XP.VIOLET_VALUE_MULT * XP.GEM_VALUE);
+    this.body.setAllowGravity(false);
     this.setCircle(18, 2, 2);
-    this.setDepth(2);
+    this.setDepth(1);
     this.setScale(1.3);
   }
 }

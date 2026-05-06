@@ -9,6 +9,11 @@ import { WEAPONS } from '../config/constants.js';
 export default class Dagger extends WeaponBase {
   constructor(scene) {
     super(scene, WEAPONS.DAGGER);
+    // Weapon tags and multipliers
+    this.tags = ['PHY'];
+    this.physDamageBonus = 0;
+    this.rangeMultiplier = 1;
+    this.projectileCountBonus = 0;
   }
 
   findClosestEnemy() {

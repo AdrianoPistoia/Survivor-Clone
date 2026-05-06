@@ -74,16 +74,17 @@ export default class CollectionOrb {
     const duration = LOOT.COLLECTION_ORB.ANIMATION_DURATION;
     const player = this.scene.player.sprite;
 
-    // Find all existing XP gems on the map
-    const gems = [...this.scene.gems.getChildren()];
-    gems.forEach(gem => {
+    const allGems = [
+      ...this.scene.gems.getChildren(),
+      ...this.scene.blueGems.getChildren(),
+      ...this.scene.violetGems.getChildren(),
+    ];
+
+    allGems.forEach(gem => {
       if (!gem.active || gem === this.sprite) return;
-
-      // Calculate distance from gem to player
       const dist = Phaser.Math.Distance.Between(gem.x, gem.y, player.x, player.y);
-      if (dist > range) return; // Out of range
+      if (dist > range) return;
 
-      // Tween gem to player with smooth homing animation
       this.scene.tweens.add({
         targets: gem,
         x: player.x,
@@ -91,7 +92,6 @@ export default class CollectionOrb {
         duration: duration,
         ease: 'Quad.easeIn',
         onComplete: () => {
-          // Trigger collection if gem still exists
           if (gem.active) {
             const value = gem.getData('value') || 1;
             this.scene.xpSystem.addXP(value);

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME, XP_SCALING, LOOT, XP } from '../config/constants.js';
+import { GAME, XP_SCALING, LOOT, XP, WEAPONS } from '../config/constants.js';
 import BlueGem from '../entities/BlueGem.js';
 import VioletGem from '../entities/VioletGem.js';
 import Player from '../entities/Player.js';
@@ -148,8 +148,12 @@ export default class GameScene extends Phaser.Scene {
 
   addWeapon(type) {
     const WeaponClass = WEAPON_CLASSES[type];
-    if (WeaponClass && !this.weapons.find(w => w.constructor === WeaponClass)) {
-      const weapon = new WeaponClass(this);
+    // Map camelCase/PascalCase to UPPER_SNAKE_CASE for config lookup
+    const toSnake = s => s.replace(/([A-Z])/g, '_$1').toUpperCase().replace(/^_/, '');
+    const configKey = toSnake(type);
+    const config = WEAPONS[configKey];
+    if (WeaponClass && config && !this.weapons.find(w => w.constructor === WeaponClass)) {
+      const weapon = new WeaponClass(this, config);
       this.weapons.push(weapon);
     }
   }
@@ -212,7 +216,12 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // Gem + Coin magnet (but NOT healing orbs)
-    [...this.gems.getChildren()].forEach(gem => {
+    const allGems = [
+      ...this.gems.getChildren(),
+      ...this.blueGems.getChildren(),
+      ...this.violetGems.getChildren()
+    ];
+    allGems.forEach(gem => {
       if (!gem.active) return;
       const dist = Phaser.Math.Distance.Between(
         this.player.sprite.x, this.player.sprite.y,
@@ -275,6 +284,15 @@ export default class GameScene extends Phaser.Scene {
   }
 
   onProjectileHitEnemy(projectile, enemySprite) {
+    if (projectile.getData('type') === 'firewand') {
+      const explosionDamage = projectile.getData('explosionDamage') || 10;
+      const ex = projectile.x;
+      const ey = projectile.y;
+      projectile.destroy();
+      this.fireWandExplode(ex, ey, explosionDamage);
+      return;
+    }
+
     const damage = projectile.getData('damage') || 10;
     const pierce = projectile.getData('pierce') || 0;
     const currentHP = enemySprite.getData('hp') - damage;
@@ -295,6 +313,68 @@ export default class GameScene extends Phaser.Scene {
     } else {
       projectile.setData('pierce', pierce - 1);
     }
+  }
+
+  fireWandExplode(x, y, explosionDamage) {
+    const radius = WEAPONS.FIRE_WAND.EXPLOSION_RADIUS;
+
+    // Visual explosion ring
+    const circle = this.add.graphics();
+    circle.fillStyle(0xff3300, 0.65);
+    circle.fillCircle(0, 0, radius);
+    circle.fillStyle(0xff8800, 0.4);
+    circle.fillCircle(0, 0, radius * 0.55);
+    circle.x = x;
+    circle.y = y;
+    circle.setDepth(25);
+    this.tweens.add({
+      targets: circle,
+      alpha: 0,
+      scaleX: 1.4,
+      scaleY: 1.4,
+      duration: 280,
+      ease: 'Quad.easeOut',
+      onComplete: () => circle.destroy(),
+    });
+
+    // Damage and burn all enemies in radius
+    for (const enemy of this.enemies.getChildren()) {
+      if (!enemy.active) continue;
+      const dist = Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y);
+      if (dist > radius) continue;
+
+      const newHP = enemy.getData('hp') - explosionDamage;
+      enemy.setData('hp', newHP);
+      enemy.setTintFill(0xff4400);
+      this.time.delayedCall(120, () => { if (enemy.active) enemy.clearTint(); });
+
+      this.applyBurn(enemy, explosionDamage * WEAPONS.FIRE_WAND.BURN_DAMAGE_PERCENT);
+
+      if (newHP <= 0) this.killEnemy(enemy);
+    }
+  }
+
+  applyBurn(enemySprite, damagePerTick) {
+    const existing = enemySprite.getData('burnTimer');
+    if (existing) existing.remove();
+
+    const ticks = WEAPONS.FIRE_WAND.BURN_TICKS;
+    const timer = this.time.addEvent({
+      delay: WEAPONS.FIRE_WAND.BURN_TICK_RATE,
+      repeat: ticks - 1,
+      callback: () => {
+        if (!enemySprite.active) { timer.remove(); return; }
+        const newHP = enemySprite.getData('hp') - damagePerTick;
+        enemySprite.setData('hp', newHP);
+        enemySprite.setTintFill(0xff6600);
+        this.time.delayedCall(80, () => { if (enemySprite.active) enemySprite.clearTint(); });
+        if (newHP <= 0) {
+          timer.remove();
+          this.killEnemy(enemySprite);
+        }
+      },
+    });
+    enemySprite.setData('burnTimer', timer);
   }
 
   killEnemy(enemySprite) {
@@ -349,13 +429,13 @@ export default class GameScene extends Phaser.Scene {
     enemySprite.destroy();
   }
   onPlayerCollectBlueGem(playerSprite, blueGem) {
-    const value = blueGem.value || blueGem.getData('value') || 3;
+    const value = blueGem.getData('value') || 3;
     this.xpSystem.addXP(value);
     blueGem.destroy();
   }
 
   onPlayerCollectVioletGem(playerSprite, violetGem) {
-    const value = violetGem.value || violetGem.getData('value') || 9;
+    const value = violetGem.getData('value') || 9;
     this.xpSystem.addXP(value);
     violetGem.destroy();
   }

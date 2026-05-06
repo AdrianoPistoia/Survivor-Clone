@@ -14,6 +14,12 @@ export default class Axe extends WeaponBase {
     this.axes = [];
     this.hitCooldowns = new Map(); // enemy → last hit time
 
+    // Weapon tags and multipliers
+    this.tags = ['PHY'];
+    this.physDamageBonus = 0;
+    this.areaMultiplier = 1;
+    this.orbitRadiusMultiplier = 1;
+
     this.spawnAxes();
   }
 

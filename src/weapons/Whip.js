@@ -5,6 +5,10 @@ import { WEAPONS } from '../config/constants.js';
 export default class Whip extends WeaponBase {
   constructor(scene) {
     super(scene, WEAPONS.WHIP);
+    // Weapon tags and multipliers
+    this.tags = ['PHY'];
+    this.physDamageBonus = 0;
+    this.rangeMultiplier = 1;
   }
 
   fire(time) {

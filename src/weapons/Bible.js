@@ -14,6 +14,12 @@ export default class Bible extends WeaponBase {
     this.books = [];
     this.hitCooldowns = new Map(); // enemy → last hit time, to avoid spam
 
+    // Weapon tags and multipliers
+    this.tags = ['MAG'];
+    this.magDamageBonus = 0;
+    this.areaMultiplier = 1;
+    this.orbitRadiusMultiplier = 1;
+
     this.spawnBooks();
   }
 

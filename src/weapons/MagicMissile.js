@@ -5,6 +5,10 @@ import { WEAPONS } from '../config/constants.js';
 export default class MagicMissile extends WeaponBase {
   constructor(scene) {
     super(scene, WEAPONS.MAGIC_MISSILE);
+    // Weapon tags and multipliers
+    this.tags = ['MAG'];
+    this.magDamageBonus = 0;
+    this.projectileCountBonus = 0;
   }
 
   fire(time) {

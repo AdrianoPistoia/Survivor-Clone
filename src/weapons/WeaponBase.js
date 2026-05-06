@@ -5,6 +5,16 @@ export default class WeaponBase {
     this.baseCooldown = config.cooldown ?? config.COOLDOWN;
     this.baseDamage = config.damage ?? config.DAMAGE;
     this.lastFired = 0;
+
+    // --- Relic/Upgrade multipliers (Phase 3) ---
+    this.magDamageBonus = 0;         // flat additive multiplier for magic
+    this.physDamageBonus = 0;        // flat additive multiplier for physical
+    this.areaMultiplier = 1;         // area size multiplier
+    this.rangeMultiplier = 1;        // range multiplier
+    this.orbitRadiusMultiplier = 1;  // orbit radius multiplier
+    this.orbitSpeedMultiplier = 1;   // orbit speed multiplier
+    this.projectileCountBonus = 0;   // extra projectiles from relics/upgrades
+    this.tags = [];                  // weapon tags, set by subclass
   }
 
   getCooldown() {
@@ -12,7 +22,11 @@ export default class WeaponBase {
   }
 
   getDamage() {
-    return this.baseDamage * this.scene.player.damageMultiplier;
+    const player = this.scene.player;
+    let tagBonus = 0;
+    if (this.tags.includes('MAG')) tagBonus += player.magDamageBonus;
+    if (this.tags.includes('PHY')) tagBonus += player.physDamageBonus;
+    return this.baseDamage * player.damageMultiplier * (1 + tagBonus);
   }
 
   canFire(time) {

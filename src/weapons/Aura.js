@@ -5,6 +5,10 @@ import { WEAPONS } from '../config/constants.js';
 export default class Aura extends WeaponBase {
   constructor(scene) {
     super(scene, WEAPONS.AURA);
+    // Weapon tags and multipliers
+    this.tags = ['MAG'];
+    this.magDamageBonus = 0;
+    this.areaMultiplier = 1;
     this.auraSprite = null;
   }
 

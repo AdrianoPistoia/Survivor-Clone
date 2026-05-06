@@ -5,21 +5,6 @@ export const GAME = {
   ARENA_WIDTH: 2000,
   ARENA_HEIGHT: 2000,
   DURATION: 1200, // 20 minutes in seconds
-  FIRE_WAND: {
-    DAMAGE: 30,
-    COOLDOWN: 1200,
-    SPEED: 320,
-    LIFETIME: 1800,
-    COUNT: 1,
-  },
-  CROSS: {
-    DAMAGE: 22,
-    COOLDOWN: 1100,
-    SPEED: 400,
-    LIFETIME: 2000,
-    COUNT: 1,
-    RETURN: true, // boomerang effect
-  },
 };
 
 export const PLAYER = {
@@ -124,6 +109,25 @@ export const WEAPONS = {
     ZONE_DURATION: 3000, // ms the puddle lasts
     TICK_RATE: 400,
   },
+  FIRE_WAND: {
+    DAMAGE: 30,
+    COOLDOWN: 2800,
+    SPEED: 320,
+    LIFETIME: 1800,
+    COUNT: 1,
+    EXPLOSION_RADIUS: 80,
+    BURN_TICKS: 5,
+    BURN_TICK_RATE: 1000,
+    BURN_DAMAGE_PERCENT: 0.15,
+  },
+  CROSS: {
+    DAMAGE: 22,
+    COOLDOWN: 1100,
+    SPEED: 400,
+    LIFETIME: 2000,
+    COUNT: 1,
+    RETURN: true,
+  },
 };
 
 export const UPGRADES = {
@@ -133,6 +137,8 @@ export const UPGRADES = {
   HP_BONUS: 20,        // +20 max HP per level
   PICKUP_BONUS: 30,    // +30 pickup range per level
   MAX_LEVEL: 5,        // max times each upgrade can be picked
+  MAG_BONUS: 0.25,     // +25% MAG damage per level
+  PHY_BONUS: 0.25,     // +25% PHY damage per level
 };
 
 // XP Scaling milestones (times in seconds)
